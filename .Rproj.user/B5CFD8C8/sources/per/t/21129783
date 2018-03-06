@@ -1,0 +1,20 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1520306968212.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "2309727850",
+    "id" : "21129783",
+    "lastKnownWriteTime" : 1520305406,
+    "last_content_update" : 1520305406,
+    "path" : "~/Dropbox/Master Study/RA Projects/Diabetes/code/diabetes.Rmd",
+    "project_path" : "diabetes.Rmd",
+    "properties" : {
+    },
+    "relative_order" : 1,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_markdown"
+}

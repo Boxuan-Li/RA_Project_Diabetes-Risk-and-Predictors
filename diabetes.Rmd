@@ -1,0 +1,83 @@
+---
+title: "Diabetes"
+author: "Boxuan Li"
+date: "28/2/2018"
+output: 
+  html_document:
+    code_folding: hide
+---
+```{r R set-up, include=FALSE}
+knitr::opts_chunk$set(
+  collapse = FALSE,
+  warning = FALSE,
+  message = FALSE,
+  fig.width = 8,
+  fig.asp = 1,
+  out.width = "90%"
+)
+
+library(MASS)
+library(ISLR)
+library(tidyverse)
+library(janitor)
+library(caret)
+
+theme_set(theme_bw())
+theme_update(legend.position = "bottom")
+```
+
+```{r data input and clean}
+diabetes <- read_csv('./data/final.csv') %>%
+  clean_names() %>%
+  select(.,sex,age=age_at_first_appt,bmicat,hypertension=high_blood_pressure,
+           steeth,mpdcat,lipid,race=race1,ethnicity=ethnicity1,smoke,result) %>%
+  filter(., !is.na(result))
+
+hist(diabetes$result,xlim =c(0,200))
+
+diabetes <- mutate(diabetes, result=ifelse(result<6.5,0,
+                                           ifelse(result<30,1,
+                                                  ifelse(result<126,0,1))))
+```
+
+_In this case, we will use backwards stepwise logistic regression with 5-fold validation to select the model._
+```{r cv and backwards selection}
+library(pROC)
+set.seed(1)
+folds <- sample(rep(1:5, length=nrow(diabetes)))
+table(folds)
+
+auc <- vector(length = 5)
+ci <- list(length=5)
+
+par(mfrow=c(3,2))
+for (k in 1:5) {
+  train.set <- diabetes[folds!=k,]
+  fullmodel.res <- glm(result~.,data = train.set,family=binomial(link ='logit'))
+  backwards <- step(fullmodel.res, direction = "backward")
+  
+  val.set <- diabetes[folds==k,]
+  pre <- predict(backwards,val.set)
+  prob.Tpositive <- exp(pre)/(1+exp(pre))
+  plot <- roc(val.set$result,prob.Tpositive,smooth = T,ci = T,plot = T,auc = T)
+  auc[k] <- auc(plot)
+  ci[[k]] <- ci(plot)
+  plot
+}
+
+auc
+ci
+```
+
+__Based on the backwards model selection and the ROC curves plotted, the model with seven predictors "smoke","steeth","hypertension","mpdcat","sex","bmicat" and "age" are selected to be the best one to illustrate the risk of diabetes and can give the largest area under the ROC curve (around 0.704) through the cross validation.__
+
+```{r refit the data with selected variables}
+best.glm <- glm(result~sex+age+bmicat+hypertension+steeth+mpdcat+smoke, data = diabetes, family = binomial(link='logit'))
+summary(best.glm)
+```
+
+__Therefore, the logistic regression model can be fitted as__
+
+$log\frac{\pi}{1-\pi}=-5.09+0.40I\{Male\}+0.03X_{age}+0.98I\{Overweight\}-0.26I\{Hypertension\}-0.02X_{Steeth}+0.61X_{Mpdcat}+0.20I\{Smoke\}$
+
+where $log\frac{\pi}{1-\pi}$ is the log odds of diabetes
