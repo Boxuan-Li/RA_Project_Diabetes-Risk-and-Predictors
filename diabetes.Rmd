@@ -78,6 +78,17 @@ summary(best.glm)
 
 __Therefore, the logistic regression model can be fitted as__
 
-$log\frac{\pi}{1-\pi}=-5.09+0.40I\{Male\}+0.03X_{age}+0.98I\{Overweight\}-0.26I\{Hypertension\}-0.02X_{Steeth}+0.61X_{Mpdcat}+0.20I\{Smoke\}$
+$Pr(Diabetes)=\frac{e^{-5.09+0.40I\{Male\}+0.03X_{age}+0.98I\{Overweight\}-0.26I\{Hypertension\}-0.02X_{Steeth}+0.61X_{Mpdcat}+0.20I\{Smoke\}}}{1+e^{-5.09+0.40I\{Male\}+0.03X_{age}+0.98I\{Overweight\}-0.26I\{Hypertension\}-0.02X_{Steeth}+0.61X_{Mpdcat}+0.20I\{Smoke\}}}$
 
-where $log\frac{\pi}{1-\pi}$ is the log odds of diabetes
+
+```{r re-predict}
+  pre.best <- predict(best.glm,diabetes)
+  prob <- exp(pre.best)/(1+exp(pre.best))
+  plot.best <- roc(diabetes$result,prob,smooth = T,ci = T,plot = T,auc = T)
+  auc.best <- auc(plot.best)
+  ci.best <- ci(plot.best)
+  
+  plot.best
+  auc.best
+  ci.best
+```
